@@ -14,11 +14,17 @@
 
 #include "find_min_max.h"
 #include "utils.h"
+#include <signal.h>
+void al()
+{
+    kill(0,SIGKILL);
+}
 
 int main(int argc, char **argv) {
   int seed = -1;
   int array_size = -1;
   int pnum = -1;
+  int timeout = 0;
   bool with_files = false;
 
   while (true) {
@@ -28,6 +34,7 @@ int main(int argc, char **argv) {
                                       {"array_size", required_argument, 0, 0},
                                       {"pnum", required_argument, 0, 0},
                                       {"by_files", no_argument, 0, 'f'},
+                                      {"timeout", required_argument, 0,0},
                                       {0, 0, 0, 0}};
 
     int option_index = 0;
@@ -67,6 +74,13 @@ int main(int argc, char **argv) {
             break;
           case 3:
             with_files = true;
+            break;
+          case 4: 
+            timeout=atoi(optarg);
+            if(timeout<=0) {
+                exit(0);
+                printf("Timer is a positive number\n");
+            }
             break;
 
           defalut:
@@ -108,6 +122,11 @@ int main(int argc, char **argv) {
   if (pipe(file_pipe)<0){
       exit(0);
   }
+  if(timeout>0) {
+    signal (14,al);
+    alarm(timeout);
+    printf("Timeout is on %d \n", timeout);
+    }
   float cut = (float)array_size / pnum;
   for (i = 0; i < pnum; i++) {
     pid_t child_pid = fork();
@@ -142,11 +161,14 @@ int main(int argc, char **argv) {
         return 0;
       }
 
-    } else {
-      printf("Fork failed!\n");
-      return 1;
+    } 
+    else {
+    printf("Fork failed!\n");
+    return 1;
     }
+    sleep(1000);
   }
+  
 
   while (active_child_processes > 0) {
     // your code here
