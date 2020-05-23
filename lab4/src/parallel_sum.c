@@ -39,7 +39,7 @@ int Sum(const struct SumArgs *args) {
 
 void *ThreadSum(void *args) {
   struct SumArgs *sum_args = (struct SumArgs *)args;
-  printf("Thread: [begin=%d, end=%d]\n", sum_args->begin, sum_args->end);
+  //printf("Thread: [begin=%d, end=%d]\n", sum_args->begin, sum_args->end);
   return (void *)(size_t)Sum(sum_args);
 }
 
@@ -112,7 +112,6 @@ int current_optind = optind ? optind : 1;
       
   }
   struct timeval begin_time;
-  gettimeofday(&begin_time,NULL);
   float c = array_size/(float)threads_num;
 
   /*
@@ -127,6 +126,7 @@ int current_optind = optind ? optind : 1;
 
   struct SumArgs args[threads_num];
   uint32_t i;
+  gettimeofday(&begin_time,NULL);
   for ( i = 0; i < threads_num; i++) {
     args[i].array = array;
     args[i].begin = round(i*c);
@@ -138,12 +138,6 @@ int current_optind = optind ? optind : 1;
     }
   
   }
-  for (i = 0; i < threads_num; i++) {
-    if (pthread_create(&threads[i], NULL, ThreadSum, (void *)&args)) {
-      printf("Error: pthread_create failed!\n");
-      return 1;
-    }
-  }
 
   int total_sum = 0;
   for (i = 0; i < threads_num; i++) {
@@ -153,10 +147,11 @@ int current_optind = optind ? optind : 1;
   }
   struct timeval end_time;
   gettimeofday(&end_time, NULL);
-  double el_time =(end_time.tv_sec - begin_time.tv_sec)*1000;
-  el_time+=(end_time.tv_usec - begin_time.tv_usec) /1000;
+  double el_time =(end_time.tv_sec - begin_time.tv_sec)*1000.0;
+  el_time+=(end_time.tv_usec - begin_time.tv_usec) /1000.0;
 
   free(array);
   printf("Total: %d\n", total_sum);
+  printf("Time: %fs\n", el_time);
   return 0;
 }
